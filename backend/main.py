@@ -46,13 +46,17 @@ ZOHO_REDIRECT_URI = os.getenv("ZOHO_REDIRECT_URI")
 ZOHO_ACCOUNTS_URL = "https://accounts.zoho.in"
 ZOHO_MAIL_API = "https://mail.zoho.in/api"
 ZOHO_API_URL = f"{ZOHO_MAIL_API}/accounts"
-TOKEN_FILE = "zoho_tokens.json"       # Legacy single-account
-ACCOUNTS_FILE = "connected_accounts.json"  # Multi-account store
+# TOKEN_FILE and ACCOUNTS_FILE are defined below after DATA_DIR is set
 
 import uuid
 from datetime import datetime
 
-CAMPAIGNS_LOG_FILE = "campaigns_log.json"
+# On Vercel, only /tmp is writable. Locally, use current directory.
+DATA_DIR = "/tmp" if os.getenv("VERCEL") else os.getcwd()
+
+CAMPAIGNS_LOG_FILE = os.path.join(DATA_DIR, "campaigns_log.json")
+ACCOUNTS_FILE = os.path.join(DATA_DIR, "connected_accounts.json")
+TOKEN_FILE = os.path.join(DATA_DIR, "zoho_tokens.json")
 EMAILS_DISABLED = False # KILL SWITCH - Set to False to enable emails
 
 def load_campaigns():
@@ -648,9 +652,9 @@ async def send_bulk_automail(
     local_attachment_name = None
     if attachment and attachment.filename:
         content = await attachment.read()
-        os.makedirs("automail_attachments", exist_ok=True)
+        os.makedirs(os.path.join(DATA_DIR, "automail_attachments"), exist_ok=True)
         local_attachment_name = attachment.filename
-        local_attachment_path = os.path.join("automail_attachments", f"{uuid.uuid4()}_{attachment.filename}")
+        local_attachment_path = os.path.join(DATA_DIR, "automail_attachments", f"{uuid.uuid4()}_{attachment.filename}")
         with open(local_attachment_path, "wb") as f:
             f.write(content)
 
@@ -786,8 +790,8 @@ def get_wa_campaigns():
 import shutil
 import aiofiles
 
-SCHEDULED_JOBS_FILE = "scheduled_jobs.json"
-SCHEDULED_DIR = "scheduled_csvs"
+SCHEDULED_JOBS_FILE = os.path.join(DATA_DIR, "scheduled_jobs.json")
+SCHEDULED_DIR = os.path.join(DATA_DIR, "scheduled_csvs")
 os.makedirs(SCHEDULED_DIR, exist_ok=True)
 
 def load_scheduled_jobs():
