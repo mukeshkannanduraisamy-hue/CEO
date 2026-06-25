@@ -1,0 +1,479 @@
+.am-root {
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ── Header ──────────────────────────────── */
+.am-header {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+  background: var(--bg-surface);
+}
+
+.am-title {
+  font-size: 20px; font-weight: 800;
+  font-family: 'Outfit', sans-serif; letter-spacing: -0.02em;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 10px;
+}
+
+.am-subtitle {
+  font-size: 12px; color: var(--text-muted); margin-top: 2px;
+}
+
+.am-refresh-btn {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+  transition: var(--transition); box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+}
+
+.am-refresh-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.am-layout {
+  flex: 1; display: flex;
+}
+
+.am-compose-panel {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  border-right: 1px solid var(--border);
+  min-width: 0;
+}
+
+.am-campaigns-panel {
+  width: 320px; min-width: 280px;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Section title ───────────────────────── */
+.am-section-title {
+  font-size: 11.5px; font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.am-optional {
+  font-weight: 400; color: var(--text-muted);
+  font-size: 11px; text-transform: none; letter-spacing: 0;
+}
+
+/* ── Input / Select ──────────────────────── */
+.am-input {
+  background: var(--bg-input);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-primary); font-size: 13px;
+  font-family: inherit; transition: var(--transition);
+  width: 100%;
+}
+
+.am-input:focus {
+  outline: none; border-color: var(--auto);
+  background: #fff; box-shadow: 0 0 0 3px var(--auto-glow);
+}
+
+.am-input::placeholder {
+  color: var(--text-muted);
+}
+
+.am-textarea {
+  resize: vertical; min-height: 90px; line-height: 1.5;
+}
+
+/* ── CSV Drop Zone ───────────────────────── */
+.am-drop-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 16px; text-align: center;
+  cursor: pointer; transition: var(--transition);
+  background: var(--bg-card-2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+}
+
+.am-drop-zone:hover, .am-drop-zone.dragging {
+  border-color: var(--auto);
+  background: var(--auto-bg);
+}
+
+.am-drop-zone.has-file {
+  border-color: var(--auto);
+  background: var(--auto-bg);
+  padding: 16px 20px;
+}
+
+.am-drop-icon {
+  color: var(--auto); opacity: 0.7;
+}
+
+.am-drop-text {
+  font-size: 14px; font-weight: 600; color: var(--text-primary);
+}
+
+.am-drop-hint {
+  font-size: 12px; color: var(--text-secondary);
+}
+
+/* ── File info (after upload) ────────────── */
+.am-file-info {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+}
+
+.am-file-icon {
+  color: var(--auto); flex-shrink: 0;
+}
+
+.am-file-name {
+  font-size: 14px; font-weight: 700;
+  color: var(--auto-deep); flex: 1; text-align: left;
+}
+
+.am-file-meta {
+  font-size: 12px; color: var(--text-muted); text-align: left;
+}
+
+/* ── Icon button ─────────────────────────── */
+.am-icon-btn {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+  transition: var(--transition); box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+}
+
+.am-icon-btn:hover {
+  background: var(--bg-hover); color: var(--text-primary);
+}
+
+.am-icon-btn.danger:hover {
+  background: var(--danger-bg); color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ── CSV Preview ─────────────────────────── */
+.am-csv-preview {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px; overflow: hidden;
+}
+
+.am-table-wrap {
+  overflow-x: auto; 
+  max-height: 140px; 
+  overflow-y: auto;
+  margin-top: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.am-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+
+.am-table th {
+  background: var(--bg-card-2); 
+  padding: 10px 14px;
+  color: var(--text-primary); 
+  font-weight: 700;
+  text-align: left; 
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-soft);
+  position: sticky; 
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.am-table th:last-child { border-right: none; }
+
+.am-table td {
+  padding: 9px 14px; 
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  min-width: 120px;
+  max-width: 300px; 
+  overflow: hidden;
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+}
+
+.am-table td:last-child { border-right: none; }
+
+.am-table tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* ── Column chips ────────────────────────── */
+.am-col-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+.am-col-chip {
+  padding: 4px 10px; border-radius: var(--radius-full);
+  background: var(--auto-bg); color: var(--auto-deep);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'Courier New', monospace;
+  transition: var(--transition);
+}
+
+.am-col-chip:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+/* ── Attachment row ──────────────────────── */
+.am-attachment-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.am-attach-btn {
+  flex: 1; display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: var(--radius-sm);
+  background: var(--bg-card-2); color: var(--text-secondary);
+  border: 1.5px dashed var(--border-color);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: var(--transition);
+  justify-content: center;
+}
+
+.am-attach-btn:hover {
+  border-color: var(--auto); color: var(--auto-deep);
+  background: var(--auto-bg);
+}
+
+/* ── Send Button ─────────────────────────── */
+.am-send-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 24px; border-radius: var(--radius-md);
+  background: var(--auto); color: #fff;
+  border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700;
+  font-family: inherit; transition: var(--transition);
+  box-shadow: 0 2px 10px var(--auto-glow);
+  justify-content: center; width: 100%;
+  margin-top: 4px;
+}
+
+.am-send-btn:hover:not(:disabled) {
+  background: var(--auto-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--auto-glow);
+}
+
+.am-send-btn:disabled {
+  opacity: 0.55; cursor: not-allowed;
+}
+
+.am-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ── Email Preview card ──────────────────── */
+.am-preview-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 16px;
+  box-shadow: var(--shadow-xs);
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.am-preview-subject {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  padding-bottom: 10px; border-bottom: 1px solid var(--border-soft);
+  font-family: 'Outfit', sans-serif;
+}
+
+.am-preview-body {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.65; white-space: pre-wrap;
+  max-height: 180px; overflow-y: auto;
+  word-break: break-word;
+}
+
+/* ── Campaign cards ──────────────────────── */
+.am-campaign-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden; transition: var(--transition);
+  box-shadow: var(--shadow-xs); margin-bottom: 8px;
+}
+
+.am-campaign-card:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.am-campaign-card.running { border-left: 3px solid var(--mail); }
+.am-campaign-card.completed { border-left: 3px solid var(--wa); }
+.am-campaign-card.failed { border-left: 3px solid var(--danger); }
+
+.am-campaign-top {
+  padding: 11px 14px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+
+.am-campaign-meta {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; min-width: 0;
+}
+
+.am-campaign-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+
+.am-campaign-subject {
+  font-size: 13px; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 500;
+}
+
+.am-campaign-progress {
+  padding: 0 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.am-progress-track {
+  height: 5px; background: var(--border);
+  border-radius: var(--radius-full); overflow: hidden;
+}
+
+.am-progress-fill {
+  height: 100%; border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.am-progress-stats {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+
+/* ── Stat Pills ──────────────────────────── */
+.am-stat-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full);
+  font-size: 10.5px; font-weight: 600;
+}
+
+.am-stat-pill.success {
+  background: rgba(16, 185, 129, 0.1); color: var(--success);
+}
+
+.am-stat-pill.error {
+  background: var(--danger-bg); color: var(--danger);
+}
+
+.am-stat-pill.pending {
+  background: var(--warning-bg); color: var(--warning);
+}
+
+.am-stat-pill.muted {
+  background: var(--bg-card-2); color: var(--text-muted);
+}
+
+/* ── Campaign detail ─────────────────────── */
+.am-campaign-detail {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card-2);
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.am-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12.5px; color: var(--text-secondary);
+}
+
+.am-detail-row span:last-child {
+  font-weight: 600; color: var(--text-primary);
+}
+
+.am-detail-errors {
+  margin-top: 6px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-sm); padding: 10px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.am-errors-label {
+  font-size: 11.5px; font-weight: 700; color: var(--danger);
+  display: flex; align-items: center; gap: 5px;
+}
+
+.am-error-email {
+  font-size: 11.5px; color: var(--danger);
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Empty state ─────────────────────────── */
+.am-empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 40px 20px;
+  color: var(--text-muted); text-align: center;
+}
+
+.am-empty-state p {
+  font-size: 14px; font-weight: 600; color: var(--text-secondary);
+}
+
+.am-empty-state span {
+  font-size: 12.5px; color: var(--text-muted);
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 900px) {
+  .am-layout {
+    flex-direction: column;
+  }
+
+  .am-campaigns-panel {
+    width: 100%; min-width: auto;
+    border-top: 1px solid var(--border);
+    border-left: none;
+    max-height: 380px;
+  }
+}
+
+@media (max-width: 600px) {
+  .am-header {
+    padding: 14px 16px;
+  }
+
+  .am-compose-panel {
+    padding: 16px;
+  }
+
+  .am-campaigns-panel {
+    padding: 12px;
+  }
+
+  .am-table-wrap {
+    max-height: 120px;
+  }
+}

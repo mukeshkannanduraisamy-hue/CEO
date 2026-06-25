@@ -1,0 +1,22 @@
+{
+  "accounts": [
+    {
+      "id": "14af6f47-e99c-4877-9be4-f6279bcbb75d",
+      "email": "rahini.varaahi@varaahigroups.com",
+      "displayName": "Rahini Varaahi",
+      "accountId": "4825077000000002002",
+      "tokens": {
+        "access_token": "1000.1448b1b339cdaeee1ac487a39cd2f835.e962efdf8d0eb449310de8129f2fe67d",
+        "refresh_token": "1000.aeef972fdaa418118db098eab1548e2c.90ec4781e8b696abce1ae5b5ae6bf1b3",
+        "scope": "ZohoMail.accounts.ALL ZohoMail.messages.ALL ZohoMail.folders.ALL ZohoMail.tags.ALL ZohoCliq.Messages.ALL",
+        "api_domain": "https://www.zohoapis.in",
+        "token_type": "Bearer",
+        "expires_in": 3600
+      },
+      "client_id": "1000.4O7AE9UI2I80HEYADBCTGDAVA1PYPF",
+      "client_secret": "50a1332097e23983e381860742389c75239249cc62",
+      "isDefault": true,
+      "connectedAt": "2026-04-28T14:45:10.091856"
+    }
+  ]
+}

@@ -1,0 +1,764 @@
+/* ── Root Layout ─────────────────────────────────
+   zm-root is a direct child of .main-content (flex column, 100vh)
+   We render sidebar | list | detail side-by-side (row).
+──────────────────────────────────────────────── */
+.zm-root {
+  display: flex;
+  flex-direction: row;       /* ← sidebar | list | detail */
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Sidebar ──────────────────────────────────── */
+.zm-sidebar {
+  width: 220px;
+  min-width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 0;
+}
+.zm-sidebar::-webkit-scrollbar { width: 0; }
+
+/* Account switcher */
+.zm-account-switcher {
+  padding: 12px 10px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.zm-account-switcher select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+}
+.zm-account-switcher select:focus {
+  border-color: var(--mail);
+  box-shadow: 0 0 0 3px var(--mail-glow);
+  background: #fff;
+}
+
+/* Compose button */
+.zm-compose-btn {
+  margin: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--mail);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px var(--mail-glow);
+  flex-shrink: 0;
+}
+.zm-compose-btn:hover {
+  background: var(--mail-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--mail-glow);
+}
+
+/* Sidebar section (Folders / Labels group) */
+.zm-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px;
+}
+.zm-sidebar-label {
+  padding: 10px 8px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+/* Folder / Label item */
+.zm-folder-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.zm-folder-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.zm-folder-item.active {
+  background: var(--mail-bg);
+  color: var(--mail-deep);
+  border-color: rgba(99, 102, 241, 0.15);
+  font-weight: 600;
+}
+.zm-folder-item span { flex: 1; }
+
+/* Unread badge */
+.zm-badge {
+  margin-left: auto;
+  background: var(--mail);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Label color dot */
+.zm-label-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Email List Panel ──────────────────────────── */
+.zm-list {
+  width: 310px;
+  min-width: 270px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--bg-card-2);
+  overflow: hidden;
+}
+
+/* Search bar + refresh row */
+.zm-list-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+.zm-search-bar {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.zm-search-bar svg {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.zm-search-bar input {
+  width: 100%;
+  padding: 8px 10px 8px 34px;
+  background: var(--bg-input);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.zm-search-bar input:focus {
+  outline: none;
+  border-color: var(--mail);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--mail-glow);
+}
+.zm-search-bar input::placeholder { color: var(--text-muted); }
+
+/* Folder title + count */
+.zm-list-title {
+  padding: 10px 14px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.zm-list-count {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+/* Scrollable email list */
+.zm-email-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Skeleton loader */
+.zm-skeleton {
+  height: 72px;
+  margin: 0 0 1px 0;
+  background: linear-gradient(90deg, var(--bg-card-2) 25%, var(--bg-hover) 50%, var(--bg-card-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* Empty state */
+.zm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.zm-empty svg { opacity: 0.15; }
+.zm-empty p { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 0; }
+
+/* Email row */
+.zm-email-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  cursor: pointer;
+  transition: var(--transition);
+  background: #fff;
+  position: relative;
+}
+.zm-email-row:hover { background: var(--bg-hover); }
+.zm-email-row.selected { background: var(--mail-bg); }
+.zm-email-row.unread { border-left: 3px solid var(--mail); padding-left: 11px; }
+
+.zm-row-left { flex-shrink: 0; }
+.zm-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mail-deep);
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.zm-row-body { flex: 1; min-width: 0; }
+.zm-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.zm-row-sender {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.zm-email-row.unread .zm-row-sender { color: var(--mail-deep); }
+.zm-row-date {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.zm-row-subject {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+.zm-email-row.unread .zm-row-subject {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.zm-row-snippet {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Row action buttons (star/delete) */
+.zm-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: var(--transition);
+}
+.zm-email-row:hover .zm-row-actions { opacity: 1; }
+
+/* ── Icon Buttons ─────────────────────────────── */
+.zm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: var(--transition);
+  box-shadow: var(--shadow-xs);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0;
+  flex-shrink: 0;
+}
+.zm-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+.zm-icon-btn.star { color: var(--text-muted); }
+.zm-icon-btn.star:hover,
+.zm-icon-btn.starred { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+.zm-icon-btn.danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Detail Pane ──────────────────────────────── */
+.zm-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* Empty detail state */
+.zm-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
+.zm-detail-empty h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif;
+}
+.zm-detail-empty p { font-size: 13px; }
+
+/* Detail view wrapper */
+.zm-detail-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.zm-detail-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  flex-wrap: wrap;
+}
+
+/* Dropdown */
+.zm-dropdown-wrap {
+  position: relative;
+}
+.zm-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: scaleIn 0.15s ease-out;
+}
+.zm-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+.zm-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Detail header (sender info) */
+.zm-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-surface);
+}
+.zm-detail-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mail-deep);
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.zm-detail-meta { flex: 1; min-width: 0; }
+.zm-detail-subject {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.zm-detail-from {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.zm-detail-from strong { color: var(--text-primary); }
+.zm-detail-from span { color: var(--text-muted); font-size: 12px; }
+.zm-detail-time {
+  font-size: 11.5px !important;
+  color: var(--text-muted) !important;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Attachments bar */
+.zm-attachments {
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-card-2);
+}
+.zm-att-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.zm-att-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.zm-att-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-xs);
+  font-family: inherit;
+}
+.zm-att-chip:hover {
+  background: var(--mail-bg);
+  color: var(--mail-deep);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: none;
+}
+
+/* Email body */
+.zm-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.75;
+  word-break: break-word;
+}
+.zm-detail-body a { color: var(--mail); }
+.zm-loading-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+}
+
+/* ── Compose Modal (bottom-right panel) ─────────── */
+.zm-compose-modal {
+  position: fixed;
+  bottom: 20px;
+  right: 24px;
+  z-index: 500;
+  width: 520px;
+  max-width: calc(100vw - 48px);
+  max-height: 75vh;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  animation: scaleIn 0.2s ease-out;
+  overflow: hidden;
+}
+.zm-compose-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card-2);
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+}
+.zm-compose-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+.zm-compose-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  transition: var(--transition);
+  outline: none;
+}
+.zm-compose-field:focus {
+  background: #fafbff;
+  border-bottom-color: var(--mail);
+}
+.zm-compose-field::placeholder { color: var(--text-muted); }
+.zm-compose-body {
+  flex: 1;
+  resize: none;
+  padding: 14px;
+  background: #fff;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.65;
+  min-height: 160px;
+  outline: none;
+}
+.zm-compose-body::placeholder { color: var(--text-muted); }
+.zm-compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card-2);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.zm-att-chip-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--mail-bg);
+  color: var(--mail-deep);
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+.zm-att-chip-small button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--mail-deep);
+  padding: 0;
+  line-height: 1;
+  font-size: 14px;
+  opacity: 0.6;
+}
+.zm-att-chip-small button:hover { opacity: 1; }
+.zm-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--mail);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px var(--mail-glow);
+  flex-shrink: 0;
+}
+.zm-send-btn:hover {
+  background: var(--mail-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--mail-glow);
+}
+
+/* ── Attachment Preview Overlay ──────────────────── */
+.zm-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+.zm-preview-modal {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  width: 90vw;
+  max-width: 900px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: scaleIn 0.25s ease-out;
+}
+
+/* ── Toast ───────────────────────────────────────── */
+.zm-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-lg);
+  background: #fff;
+  animation: scaleIn 0.25s ease-out;
+  border: 1px solid var(--border);
+  min-width: 240px;
+}
+.zm-toast--success { border-left: 4px solid var(--success); color: var(--success); }
+.zm-toast--error   { border-left: 4px solid var(--danger);  color: var(--danger);  }
+.zm-toast--info    { border-left: 4px solid var(--mail);    color: var(--mail);    }
+
+/* Spin utility for this component */
+.spinning { animation: spin 0.9s linear infinite; }
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 1024px) {
+  .zm-sidebar { width: 180px; min-width: 160px; }
+  .zm-list    { width: 260px; min-width: 220px; }
+}
+@media (max-width: 768px) {
+  .zm-root { flex-direction: column; }
+  .zm-sidebar {
+    width: 100%;
+    min-width: auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 6px;
+    gap: 4px;
+  }
+  .zm-sidebar::-webkit-scrollbar { height: 0; }
+  .zm-sidebar-section { flex-direction: row; padding: 0; }
+  .zm-sidebar-label   { display: none; }
+  .zm-folder-item     { white-space: nowrap; }
+  .zm-compose-btn     { margin: 6px; padding: 8px 12px; }
+  .zm-account-switcher { padding: 6px; }
+  .zm-list    { width: 100%; min-width: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .zm-compose-modal   { width: 95vw; right: 2.5vw; bottom: 12px; }
+}

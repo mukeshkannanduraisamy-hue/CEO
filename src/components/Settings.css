@@ -1,0 +1,273 @@
+/* ── Settings Root ───────────────────────── */
+.settings-root {
+  display: flex; flex-direction: column;
+  height: 100vh; overflow-y: auto; overflow-x: hidden;
+  background: var(--bg);
+  padding: 32px 36px 48px;
+}
+
+/* ── Title / Subtitle ────────────────────── */
+.settings-title {
+  font-size: 26px; font-weight: 800;
+  font-family: 'Outfit', sans-serif; letter-spacing: -0.02em;
+  color: var(--text-primary); margin-bottom: 6px;
+}
+
+.settings-subtitle {
+  font-size: 14px; color: var(--text-secondary);
+  margin-bottom: 32px; line-height: 1.5;
+}
+
+/* ── Section ─────────────────────────────── */
+.settings-section {
+  margin-bottom: 40px;
+}
+
+.settings-section-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.settings-section-desc {
+  font-size: 13.5px; color: var(--text-secondary);
+  line-height: 1.6; margin-bottom: 18px;
+}
+
+/* ── Table ───────────────────────────────── */
+.accounts-table {
+  width: 100%; border-collapse: collapse;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-xs);
+  font-size: 13.5px;
+}
+
+.accounts-table th {
+  background: var(--bg-card-2); padding: 12px 16px;
+  color: var(--text-muted); font-size: 11px;
+  font-weight: 700; text-align: left;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.accounts-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.accounts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.accounts-table tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* ── Account Cell ────────────────────────── */
+.acc-cell {
+  display: flex; align-items: center; gap: 12px;
+}
+
+.acc-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 14px;
+  flex-shrink: 0;
+}
+
+.acc-name {
+  font-size: 13.5px; font-weight: 600;
+  color: var(--text-primary); display: block;
+}
+
+.acc-email {
+  font-size: 11.5px; color: var(--text-muted);
+  display: block; margin-top: 1px;
+}
+
+/* ── Badges ──────────────────────────────── */
+.badge-connected {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  font-size: 11.5px; font-weight: 700;
+  background: var(--success-bg); color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-default {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  font-size: 11.5px; font-weight: 700;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--mail-deep);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* ── Buttons ─────────────────────────────── */
+.btn-sm {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); font-family: inherit;
+  transition: var(--transition);
+}
+
+.btn-ghost {
+  background: #fff; color: var(--text-secondary);
+  border: 1px solid var(--border); box-shadow: var(--shadow-xs);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-danger-ghost {
+  background: var(--danger-bg); color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger-ghost:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  background: var(--mail); color: #fff;
+  border: none; cursor: pointer;
+  font-size: 13.5px; font-weight: 700;
+  font-family: inherit; transition: var(--transition);
+  box-shadow: 0 2px 8px var(--mail-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--mail-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--mail-glow);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55; cursor: not-allowed;
+}
+
+/* ── Actions Cell ────────────────────────── */
+.actions-cell {
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Connect Footer ──────────────────────── */
+.connect-footer {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 14px 0; margin-top: 12px;
+  gap: 12px; flex-wrap: wrap;
+}
+
+.connect-footer p {
+  font-size: 12.5px; color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── Empty State ─────────────────────────── */
+.empty-accounts {
+  text-align: center; padding: 48px 24px;
+  color: var(--text-muted);
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.empty-accounts svg {
+  opacity: 0.15; display: block; margin: 0 auto 16px;
+}
+
+.empty-accounts h3 {
+  font-size: 16px; font-weight: 700;
+  color: var(--text-secondary); margin-bottom: 6px;
+}
+
+.empty-accounts p {
+  font-size: 13.5px; color: var(--text-muted);
+}
+
+/* ── Modal ───────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: #fff; border-radius: var(--radius-xl);
+  padding: 32px; width: 100%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  animation: scaleIn 0.25s ease-out;
+}
+
+/* ── Toast ───────────────────────────────── */
+.settings-toast {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999;
+  padding: 13px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  background: #fff; border: 1px solid var(--border);
+  animation: scaleIn 0.25s ease-out;
+  min-width: 220px;
+}
+
+.settings-toast.success {
+  border-left: 4px solid var(--success);
+  color: var(--success);
+}
+
+.settings-toast.error {
+  border-left: 4px solid var(--danger);
+  color: var(--danger);
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 768px) {
+  .settings-root {
+    padding: 20px 16px 40px;
+  }
+
+  .settings-title {
+    font-size: 22px;
+  }
+
+  .accounts-table th,
+  .accounts-table td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .acc-avatar {
+    width: 30px; height: 30px; font-size: 12px;
+  }
+
+  .connect-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .accounts-table {
+    display: block; overflow-x: auto;
+  }
+}
