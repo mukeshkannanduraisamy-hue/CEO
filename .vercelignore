@@ -1,0 +1,28 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/scratch/
+backend/whatsapp_session/
+backend/scheduled_csvs/
+backend/automail_attachments/
+backend/temp_attachments/
+backend/campaigns_log.json
+backend/connected_accounts.json
+backend/zoho_tokens.json
+backend/scheduled_jobs.json
+backend/wa_blacklist.json
+backend/*.json
+backend/whatsapp_selenium.py
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Misc
+*.log
+*.pem
+*.zip
+*.tar.gz
+scratch/
+deploy_temp/

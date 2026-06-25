@@ -4,7 +4,7 @@ import requests
 import asyncio
 import io
 import random
-import pandas as pd
+import csv
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -661,19 +661,25 @@ async def send_bulk_automail(
     file_content = await csv_file.read()
     try:
         if csv_file.filename.lower().endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(file_content))
+            reader = csv.DictReader(io.StringIO(file_content.decode('utf-8-sig')))
+            rows = list(reader)
         else:
-            df = pd.read_excel(io.BytesIO(file_content))
+            # Excel support via openpyxl
+            from openpyxl import load_workbook
+            wb = load_workbook(filename=io.BytesIO(file_content), read_only=True, data_only=True)
+            ws = wb.active
+            headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+            rows = [dict(zip(headers, [cell.value for cell in row])) for row in ws.iter_rows(min_row=2)]
+            wb.close()
     except Exception as e:
         raise HTTPException(400, f"Failed to parse file: {e}")
 
-    email_col = next((c for c in df.columns if c.lower() in ['email', 'e-mail', 'email address', 'emailaddress', 'contact email']), None)
+    columns = list(rows[0].keys()) if rows else []
+    email_col = next((c for c in columns if c and c.lower() in ['email', 'e-mail', 'email address', 'emailaddress', 'contact email']), None)
     if not email_col:
         raise HTTPException(400, "CSV must have an 'Email' column (e.g. Email, e-mail, Email Address)")
 
-    df = df.dropna(subset=[email_col])
-    rows = df.to_dict('records')
-    valid_rows = [r for r in rows if '@' in str(r.get(email_col, ''))]
+    valid_rows = [r for r in rows if r.get(email_col) and '@' in str(r.get(email_col, ''))]
 
     if not valid_rows:
         raise HTTPException(400, "No valid email addresses found in the CSV.")
@@ -734,7 +740,7 @@ async def process_automail_campaign(campaign_id: str):
 
         for col, val in row.items():
             placeholder = f"{{{col}}}"
-            val_str = str(val) if pd.notna(val) else ""
+            val_str = str(val) if val is not None and str(val) != 'nan' else ""
             row_subject = row_subject.replace(placeholder, val_str)
             row_message = row_message.replace(placeholder, val_str)
 
