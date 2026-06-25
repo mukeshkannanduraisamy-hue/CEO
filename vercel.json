@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "http://52.66.112.231/api/:match*"
+      "source": "/api/(.*)",
+      "destination": "http://52.66.112.231/api/$1"
     },
     {
-      "source": "/wa/:match*",
-      "destination": "http://52.66.112.231/wa/:match*"
+      "source": "/wa/(.*)",
+      "destination": "http://52.66.112.231/wa/$1"
     },
     {
       "source": "/(.*)",
