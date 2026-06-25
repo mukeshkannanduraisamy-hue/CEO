@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "http://52.66.112.231:5173/api/:match*"
+      "destination": "http://52.66.112.231/api/:match*"
     },
     {
-      "source": "/uploads/:match*",
-      "destination": "http://52.66.112.231:5173/uploads/:match*"
+      "source": "/wa/:match*",
+      "destination": "http://52.66.112.231/wa/:match*"
     },
     {
       "source": "/(.*)",
