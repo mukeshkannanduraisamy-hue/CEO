@@ -11,16 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 from dotenv import load_dotenv
-from whatsapp_selenium import WhatsAppSeleniumEngine
 from routers import reports, zoho_reports, payouts
 from database import connect_dbs, disconnect_dbs
 
 load_dotenv()
 
 app = FastAPI(title="CEO Command Center API")
-
-# Initialize WhatsApp Engine
-wa_engine = WhatsAppSeleniumEngine()
 
 @app.on_event("startup")
 async def startup():
@@ -367,7 +363,6 @@ def get_zoho_status():
 @app.get("/api/zoho/connected-accounts")
 def get_connected_accounts():
     data = load_all_accounts()
-    # Enrich with email from Zoho if missing
     return {"accounts": [
         {"id": a["id"], "email": a.get("email",""), "displayName": a.get("displayName",""),
          "accountId": a.get("accountId",""), "isDefault": a.get("isDefault", False),
@@ -648,7 +643,7 @@ async def send_bulk_automail(
     zoho_account_id, account = get_account_info(account_id)
     from_address = account["primaryEmailAddress"]
 
-    # Save attachment locally for ZeptoMail
+    # Save attachment locally
     local_attachment_path = None
     local_attachment_name = None
     if attachment and attachment.filename:
@@ -689,7 +684,7 @@ async def send_bulk_automail(
         "subject": subject,
         "started_at": datetime.utcnow().isoformat(),
         "from_email": from_address,
-        "rows": valid_rows,  # kept internally, not sent to frontend
+        "rows": valid_rows,
         "email_col": email_col,
         "message_template": message,
         "local_attachment_path": local_attachment_path,
@@ -717,7 +712,6 @@ async def process_automail_campaign(campaign_id: str):
     internal_account_id = camp["internal_account_id"]
     from_address = camp["from_email"]
     email_col = camp["email_col"]
-    # ZeptoMail Credentials
     import smtplib, ssl, mimetypes
     from email.message import EmailMessage
 
@@ -734,24 +728,20 @@ async def process_automail_campaign(campaign_id: str):
         row_subject = camp["subject"]
         row_message = camp["message_template"]
 
-        # Replace all column placeholders
         for col, val in row.items():
             placeholder = f"{{{col}}}"
             val_str = str(val) if pd.notna(val) else ""
             row_subject = row_subject.replace(placeholder, val_str)
             row_message = row_message.replace(placeholder, val_str)
 
-        # Prepare EmailMessage
         msg = EmailMessage()
         msg['Subject'] = row_subject
         msg['To'] = to_email
         msg['From'] = from_address
         
-        # HTML Content
         msg.set_content(row_message.replace("<br>", "\n"))
         msg.add_alternative(row_message.replace("\n", "<br>"), subtype='html')
 
-        # Add Attachment if present
         if local_att_path and os.path.exists(local_att_path):
             with open(local_att_path, 'rb') as f:
                 att_data = f.read()
@@ -760,7 +750,6 @@ async def process_automail_campaign(campaign_id: str):
             maintype, subtype = mime_type.split('/', 1)
             msg.add_attachment(att_data, maintype=maintype, subtype=subtype, filename=local_att_name)
 
-        # Send via ZeptoMail
         try:
             with smtplib.SMTP(smtp_server, smtp_port) as server:
                 server.starttls()
@@ -771,12 +760,10 @@ async def process_automail_campaign(campaign_id: str):
             CAMPAIGNS[campaign_id]["failed"] += 1
             CAMPAIGNS[campaign_id]["errors"].append(f"{to_email}: {str(e)}")
 
-        # Periodic save — every 10 sends, persist progress to disk
         processed = CAMPAIGNS[campaign_id]["success"] + CAMPAIGNS[campaign_id]["failed"]
         if processed % 10 == 0:
             save_campaigns(CAMPAIGNS)
 
-        # Rate limit: 5-15s randomized delay — much safer for Zoho
         import random
         await asyncio.sleep(random.uniform(5, 15))
 
@@ -785,300 +772,15 @@ async def process_automail_campaign(campaign_id: str):
     save_campaigns(CAMPAIGNS)
     print(f"[AutoMail] Campaign {campaign_id} done — {CAMPAIGNS[campaign_id]['success']} sent, {CAMPAIGNS[campaign_id]['failed']} failed.")
 
-# ─── WhatsApp Bulk ────────────────────────────────────────────────────────────
-
-# Anti-ban configuration — tune these values to reduce risk
-WA_CONFIG = {
-    "min_delay_sec": 12,       # Minimum wait between messages (seconds)
-    "max_delay_sec": 25,       # Maximum wait between messages (seconds)
-    "burst_after": 15,         # Send a long pause after this many messages
-    "burst_pause_min": 60,     # Min long-pause duration (seconds)
-    "burst_pause_max": 120,    # Max long-pause duration (seconds)
-    "daily_limit": 150,        # Max messages per day (safe limit for unofficial API)
-}
-
-# WhatsApp Engine handled via wa_engine
-
-# Blacklist file — numbers that opted out or got an error
-WA_BLACKLIST_FILE = "wa_blacklist.json"
-
-def load_wa_blacklist() -> set:
-    if os.path.exists(WA_BLACKLIST_FILE):
-        try:
-            with open(WA_BLACKLIST_FILE, 'r') as f:
-                return set(json.load(f))
-        except Exception:
-            pass
-    return set()
-
-def save_wa_blacklist(blacklist: set):
-    with open(WA_BLACKLIST_FILE, 'w') as f:
-        json.dump(list(blacklist), f, indent=2)
-
-def normalize_phone(phone: str) -> str:
-    """Strip spaces, dashes, parens. Ensure starts with country code."""
-    if not phone:
-        return ""
-    import re
-    cleaned = re.sub(r'[\s\-().+]', '', str(phone))
-    # If it doesn't start with a country code (assume India +91 if 10 digits)
-    if len(cleaned) == 10 and cleaned.isdigit():
-        cleaned = "91" + cleaned
-    return cleaned
+# ─── WhatsApp (DISABLED) ──────────────────────────────────────────────────────
 
 @app.get("/api/whatsapp/status")
 def get_wa_status():
-    """Return status of the WhatsApp engine."""
-    return {
-        "status": wa_engine.check_status(),
-        "qr": wa_engine.qr_data
-    }
+    return {"status": "disabled", "message": "WhatsApp service is not available in this deployment."}
 
 @app.get("/api/whatsapp/campaigns")
 def get_wa_campaigns():
-    """Return list of WhatsApp campaigns."""
-    return {
-        "campaigns": [
-            {"id": cid, **{k: v for k, v in c.items() if k != 'contacts'}}
-            for cid, c in wa_engine.campaigns.items()
-        ]
-    }
-
-@app.get("/api/whatsapp/screenshot")
-def get_wa_screenshot():
-    """Debug helper to see what's happening in the browser."""
-    if not wa_engine.driver:
-        raise HTTPException(400, "Driver not started")
-    try:
-        from fastapi.responses import Response
-        img_data = wa_engine.driver.get_screenshot_as_png()
-        return Response(content=img_data, media_type="image/png")
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.get("/api/whatsapp/groups")
-def get_wa_groups():
-    """Fetch groups using the Selenium engine."""
-    return {"groups": wa_engine.get_groups()}
-
-@app.get("/api/whatsapp/groups/{group_name}/participants")
-def get_wa_group_participants(group_name: str):
-    """Deep scrape participants for a specific group."""
-    try:
-        members = wa_engine.scrape_group_participants(group_name)
-        return {"group": group_name, "participants": members, "count": len(members)}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.post("/api/whatsapp/reinit")
-def reinit_whatsapp(headless: bool = False):
-    """Restart the WhatsApp browser."""
-    try:
-        wa_engine.start_driver(headless=headless)
-        return {"status": "started"}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.post("/api/whatsapp/groups/send")
-async def whatsapp_group_send(
-    background_tasks: BackgroundTasks,
-    req: dict
-):
-    """Bulk send to groups."""
-    group_ids = req.get("group_ids") # These are names in our Selenium engine
-    message = req.get("message")
-    attachment = req.get("attachment")
-    
-    if not group_ids or not message:
-        raise HTTPException(400, "Groups and message are required.")
-
-    # Save attachment if exists
-    att_path = None
-    if attachment:
-        import base64
-        os.makedirs("temp_attachments", exist_ok=True)
-        att_path = os.path.join("temp_attachments", f"{uuid.uuid4()}_file")
-        with open(att_path, "wb") as f:
-            f.write(base64.b64decode(attachment.get("data") if isinstance(attachment, dict) else attachment))
-
-    campaign_id = str(uuid.uuid4())
-    wa_engine.campaigns[campaign_id] = {
-        "total": len(group_ids),
-        "sent": 0,
-        "failed": 0,
-        "errors": [],
-        "status": "queued",
-        "started_at": datetime.utcnow().isoformat(),
-        "preview": message[:100],
-        "has_attachment": bool(attachment)
-    }
-
-    # Use the individual send loop but with group names
-    background_tasks.add_task(
-        wa_engine.run_campaign,
-        campaign_id,
-        group_ids,
-        message,
-        att_path
-    )
-
-    return {"status": "queued", "campaign_id": campaign_id, "total": len(group_ids)}
-
-@app.post("/api/whatsapp/logout")
-def logout_whatsapp():
-    """Close the browser and clear session."""
-    if wa_engine.driver:
-        wa_engine.driver.quit()
-        wa_engine.driver = None
-    wa_engine.status = "disconnected"
-    return {"status": "logged_out"}
-
-@app.post("/api/whatsapp/send")
-async def whatsapp_bulk_send(
-    background_tasks: BackgroundTasks,
-    req: dict # Using dict for flexibility with the existing frontend payload
-):
-    contacts = req.get("contacts")
-    message = req.get("message")
-    attachment = req.get("attachment") # This is base64 in the frontend
-    delay_seconds = req.get("delay_seconds", 12)
-
-    if not contacts or not message:
-        raise HTTPException(400, "Contacts and message are required.")
-
-    # Save base64 attachment to temp file if exists
-    att_path = None
-    if attachment:
-        import base64
-        os.makedirs("temp_attachments", exist_ok=True)
-        att_path = os.path.join("temp_attachments", f"{uuid.uuid4()}_file")
-        with open(att_path, "wb") as f:
-            f.write(base64.b64decode(attachment))
-
-    campaign_id = str(uuid.uuid4())
-    wa_engine.campaigns[campaign_id] = {
-        "total": len(contacts),
-        "sent": 0,
-        "failed": 0,
-        "errors": [],
-        "status": "queued",
-        "started_at": datetime.utcnow().isoformat(),
-        "preview": message[:100],
-        "has_attachment": bool(attachment)
-    }
-
-    background_tasks.add_task(wa_engine.run_campaign, campaign_id, contacts, message, att_path, (delay_seconds, delay_seconds+5))
-    return {"campaign_id": campaign_id, "total": len(contacts), "status": "queued"}
-
-@app.post("/api/whatsapp/test")
-async def whatsapp_test_send(req: dict):
-    phone = req.get("phone")
-    message = req.get("message")
-    attachment = req.get("attachment")
-    
-    if not phone or not message:
-        raise HTTPException(400, "Phone and message are required")
-        
-    att_path = None
-    if attachment and attachment.get("data"):
-        import base64
-        os.makedirs("temp_attachments", exist_ok=True)
-        att_path = os.path.join("temp_attachments", f"{uuid.uuid4()}_test")
-        with open(att_path, "wb") as f:
-            f.write(base64.b64decode(attachment["data"]))
-            
-    success = wa_engine._send_text(phone, message)
-    if success and att_path:
-        try:
-            wa_engine.send_attachment(att_path)
-        except Exception as e:
-            return {"error": f"Text sent, but attachment failed: {e}"}
-            
-    if success:
-        return {"status": "sent", "to": phone}
-    else:
-        return {"error": "Failed to send test message"}
-
-
-@app.get("/api/whatsapp/blacklist")
-def get_wa_blacklist():
-    return {"blacklist": list(load_wa_blacklist())}
-
-@app.delete("/api/whatsapp/blacklist/{phone}")
-def remove_from_blacklist(phone: str):
-    bl = load_wa_blacklist()
-    bl.discard(normalize_phone(phone))
-    save_wa_blacklist(bl)
-    return {"status": "removed"}
-
-@app.post("/api/whatsapp/bulk")
-async def whatsapp_bulk_dispatch(
-    background_tasks: BackgroundTasks,
-    csv_file: UploadFile = File(...),
-    message: str = Form(...),
-    attachment: UploadFile = File(None)
-):
-    content = await csv_file.read()
-    try:
-        if csv_file.filename.lower().endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(content))
-        else:
-            df = pd.read_excel(io.BytesIO(content))
-    except Exception as e:
-        raise HTTPException(400, f"Failed to parse file: {e}")
-
-    cols = [c.lower() for c in df.columns]
-    if 'phone' not in cols and 'number' not in cols:
-        raise HTTPException(400, "CSV must contain a 'Phone' or 'Number' column")
-
-    blacklist = load_wa_blacklist()
-    contacts = df.to_dict('records')
-
-    # Filter blacklisted and invalid numbers
-    valid_contacts = []
-    skipped_blacklist = 0
-    skipped_invalid = 0
-    for c in contacts:
-        raw_phone = c.get('Phone') or c.get('phone') or c.get('Number') or c.get('number')
-        phone = normalize_phone(str(raw_phone))
-        if not phone or len(phone) < 10:
-            skipped_invalid += 1
-            continue
-        if phone in blacklist:
-            skipped_blacklist += 1
-            continue
-        c['_normalized_phone'] = phone
-        valid_contacts.append(c)
-
-    if not valid_contacts:
-        raise HTTPException(400, "No valid contacts found after filtering.")
-
-    # Enforce daily limit
-    if len(valid_contacts) > WA_CONFIG["daily_limit"]:
-        raise HTTPException(400, f"Contact count ({len(valid_contacts)}) exceeds daily safe limit of {WA_CONFIG['daily_limit']}. Split your CSV into smaller batches.")
-
-    campaign_id = str(uuid.uuid4())
-    wa_engine.campaigns[campaign_id] = {
-        "total": len(valid_contacts),
-        "sent": 0,
-        "failed": 0,
-        "skipped_blacklist": skipped_blacklist,
-        "skipped_invalid": skipped_invalid,
-        "errors": [],
-        "status": "queued",
-        "started_at": datetime.utcnow().isoformat(),
-    }
-
-    background_tasks.add_task(wa_engine.run_campaign, campaign_id, valid_contacts, message)
-    return {
-        "status": "started",
-        "campaign_id": campaign_id,
-        "total": len(valid_contacts),
-        "skipped_blacklist": skipped_blacklist,
-        "skipped_invalid": skipped_invalid,
-    }
-
-
+    return {"campaigns": []}
 
 # ─── Scheduler ─────────────────────────────────────────────────────────────────
 import shutil
@@ -1169,97 +871,6 @@ def delete_scheduled_job(job_id: str):
         except: pass
             
     return {"status": "success"}
-
-async def scheduler_loop():
-    while True:
-        try:
-            jobs = load_scheduled_jobs()
-            # User is in India (IST = UTC+5:30). 
-            # We calculate current IST time to compare with user's input.
-            from datetime import timedelta
-            now_ist = datetime.utcnow() + timedelta(hours=5, minutes=30)
-            
-            updated = False
-            for job in jobs:
-                if job["status"] == "pending":
-                    target = datetime.fromisoformat(job["target_datetime"])
-                    if now_ist >= target:
-                        # Time to execute!
-                        print(f"[Scheduler] Triggering job {job['id']} ({job['type']})")
-                        job["status"] = "running"
-                        updated = True
-                        
-                        # Trigger in background
-                        asyncio.create_task(execute_scheduled_job(job))
-                        
-            if updated:
-                save_scheduled_jobs(jobs)
-        except Exception as e:
-            print(f"[Scheduler] Loop error: {e}")
-            
-        await asyncio.sleep(60) # Check every minute
-
-async def execute_scheduled_job(job):
-    try:
-        import mimetypes
-        import base64
-
-        if job["type"] == "email":
-            with open(job["file_path"], "rb") as f:
-                csv_content = f.read()
-            
-            files = {"csv_file": (os.path.basename(job["file_path"]), csv_content)}
-            if job.get("attachment_path") and os.path.exists(job["attachment_path"]):
-                with open(job["attachment_path"], "rb") as f:
-                    att_content = f.read()
-                files["attachment"] = (job.get("attachment_filename", "attachment"), att_content)
-
-            data = {"subject": job["subject"], "message": job["message"], "account_id": job.get("account_id", "")}
-            requests.post("http://localhost:8000/api/zoho/automail/bulk", files=files, data=data)
-            
-        elif job["type"] == "whatsapp":
-            with open(job["file_path"], "rb") as f:
-                content = f.read()
-            df = pd.read_csv(io.BytesIO(content)) if job["file_path"].endswith('.csv') else pd.read_excel(io.BytesIO(content))
-            contacts = df.to_dict('records')
-            
-            attachment_obj = None
-            if job.get("attachment_path") and os.path.exists(job["attachment_path"]):
-                with open(job["attachment_path"], "rb") as f:
-                    att_data = f.read()
-                
-                mime_type, _ = mimetypes.guess_type(job["attachment_path"])
-                attachment_obj = {
-                    "mimetype": mime_type or "application/octet-stream",
-                    "data": base64.b64encode(att_data).decode('utf-8'),
-                    "filename": job.get("attachment_filename", "file")
-                }
-
-            # Use internal wa_engine for scheduled tasks
-            campaign_id = str(uuid.uuid4())
-            wa_engine.campaigns[campaign_id] = {
-                "total": len(contacts),
-                "sent": 0, "failed": 0, "errors": [],
-                "status": "queued", "started_at": datetime.utcnow().isoformat(),
-            }
-            # Run in a separate thread since it's a blocking Selenium call
-            import threading
-            threading.Thread(target=wa_engine.run_campaign, args=(campaign_id, contacts, job["message"], job.get("attachment_path"))).start()
-            
-        # Mark completed
-        jobs = load_scheduled_jobs()
-        for j in jobs:
-            if j["id"] == job["id"]:
-                j["status"] = "completed"
-        save_scheduled_jobs(jobs)
-        
-    except Exception as e:
-        print(f"[Scheduler] Execution failed for {job['id']}: {e}")
-        jobs = load_scheduled_jobs()
-        for j in jobs:
-            if j["id"] == job["id"]:
-                j["status"] = "failed"
-        save_scheduled_jobs(jobs)
 
 @app.on_event("startup")
 async def startup_event():

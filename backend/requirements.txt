@@ -9,6 +9,3 @@ aiomysql
 pymysql
 openpyxl==3.1.5
 aiofiles
-selenium==4.21.0
-webdriver-manager==4.0.1
-pyvirtualdisplay==3.0
