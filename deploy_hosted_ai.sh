@@ -56,5 +56,12 @@ fi
 chmod 644 "$AI_DIR/index.php" "$AI_DIR/.htaccess" "$AI_DIR/db_config.php" 2>/dev/null || true
 chmod 666 "$AI_DIR/config.json" 2>/dev/null || true
 
+# 5. Sync latest ai-assistant.js to Beta frontend
+BETAPPL_DIR=/home/u403881955/domains/betappl.kcnanja.com/public_html
+if [ -d "$BETAPPL_DIR" ]; then
+    curl -sL "https://raw.githubusercontent.com/mukeshkannanduraisamy-hue/CEO/main/ai-assistant-v4.js?v=$(date +%s)" -o "$BETAPPL_DIR/ai-assistant.js"
+    chmod 644 "$BETAPPL_DIR/ai-assistant.js"
+    echo "Beta ai-assistant.js synced successfully. Size: $(wc -c < "$BETAPPL_DIR/ai-assistant.js")"
+fi
+
 echo "=== HOSTED AI DEPLOYED TO $AI_DIR ==="
-ls -la "$AI_DIR"
