@@ -106,7 +106,9 @@
   let currentAiConfig = null;
   let isChatOpen = false;
   let isSending = false;
+  let currentPlatformConversationId = null;
   const sessionId = 'stumpix-session-' + Date.now();
+  const DEFAULT_PLATFORM_KEY = 'aap_pk_9mw4GOAi1QOFUz5Muy2Z9IHMtVR0m7aO';
 
   // 3. Inject Styles
   function injectStyles() {
@@ -684,12 +686,27 @@
     isSending = true;
 
     try {
-      const activeProvider = localStorage.getItem('stumpix_ai_provider') || currentAiConfig?.provider || 'gemini';
-      const localEndpoint = (localStorage.getItem('stumpix_ai_endpoint') || currentAiConfig?.endpointUrl || 'http://localhost:3000').trim().replace(/\/+$/, '');
+      const activeProvider = localStorage.getItem('stumpix_ai_provider') || currentAiConfig?.provider || 'platform';
+      const localEndpoint = (localStorage.getItem('stumpix_ai_endpoint') || currentAiConfig?.endpointUrl || 'http://localhost:4000').trim().replace(/\/+$/, '');
 
       let res;
-      if (activeProvider === 'localhost') {
-        // Direct browser routing to Localhost AI API Server (with CORS support)
+      if (activeProvider === 'platform') {
+        // Direct browser routing to dedicated AI Assistant Platform (Port 4000)
+        const botKey = localStorage.getItem('stumpix_bot_key') || currentAiConfig?.apiKey || DEFAULT_PLATFORM_KEY;
+        const platformEndpoint = (localStorage.getItem('stumpix_ai_endpoint') || 'http://localhost:4000').trim().replace(/\/+$/, '');
+        res = await fetch(`${platformEndpoint}/v1/chat/message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            key: botKey,
+            message: text,
+            conversationId: currentPlatformConversationId || undefined,
+          }),
+        });
+      } else if (activeProvider === 'localhost') {
+        // Direct browser routing to Localhost SQLite Chatbot Server (Port 3000)
         res = await fetch(`${localEndpoint}/api/settings/ai/chat`, {
           method: 'POST',
           headers: {
@@ -722,13 +739,18 @@
         const errMsg = (data && data.error && (data.error.message || data.error)) || data.message || 'Request failed';
         appendMessage('assistant', `❌ **AI Notice**: ${errMsg}`);
       } else {
+        if (data.conversationId) {
+          currentPlatformConversationId = data.conversationId;
+        }
         const reply = data.data && data.data.reply ? data.data.reply : (data.reply || data.message || 'No reply generated.');
-        appendMessage('assistant', reply);
+        appendMessage('assistant', reply, data.visuals);
       }
     } catch (err) {
       removeTypingIndicator();
-      const activeProvider = localStorage.getItem('stumpix_ai_provider') || currentAiConfig?.provider || 'gemini';
-      if (activeProvider === 'localhost') {
+      const activeProvider = localStorage.getItem('stumpix_ai_provider') || currentAiConfig?.provider || 'platform';
+      if (activeProvider === 'platform') {
+        appendMessage('assistant', `⚠️ **AI Platform Offline**: Unable to reach AI Assistant Platform at \`${localStorage.getItem('stumpix_ai_endpoint') || 'http://localhost:4000'}\`.\n\nPlease ensure your local AI host is running by double-clicking \`run-ai-platform.bat\` on your computer.`);
+      } else if (activeProvider === 'localhost') {
         appendMessage('assistant', `⚠️ **Localhost Offline**: Unable to connect to Localhost AI API at \`${localStorage.getItem('stumpix_ai_endpoint') || 'http://localhost:3000'}\`.\n\nPlease ensure your local server is running by double-clicking \`run-local-ai.bat\` on your computer.`);
       } else {
         appendMessage('assistant', `⚠️ **Network Error**: Unable to reach AI service: ${err.message}`);
@@ -738,7 +760,7 @@
     }
   }
 
-  function appendMessage(role, text) {
+  function appendMessage(role, text, visuals) {
     const list = document.getElementById('ai-messages');
     if (!list) return;
 
@@ -756,7 +778,35 @@
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br/>');
 
-    div.innerHTML = `<div class="ai-msg-bubble"><p>${formatted}</p></div>`;
+    // Rich visual output (tables, charts) from AI Assistant Platform tools
+    let visualHtml = '';
+    if (Array.isArray(visuals) && visuals.length > 0) {
+      for (const v of visuals) {
+        if (v && v.kind === 'table' && Array.isArray(v.columns) && Array.isArray(v.rows)) {
+          visualHtml += `
+            <div style="margin-top:10px; overflow-x:auto; border-radius:8px; border:1px solid #cbd5e1; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              ${v.title ? `<div style="padding:6px 12px; background:#f1f5f9; font-weight:700; font-size:12px; color:#1e293b; border-bottom:1px solid #cbd5e1;">📊 ${v.title}</div>` : ''}
+              <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                <thead>
+                  <tr style="background:#f8fafc; border-bottom:1px solid #cbd5e1;">
+                    ${v.columns.map(c => `<th style="padding:6px 10px; font-weight:600; color:#475569;">${c}</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${v.rows.map((row, rIdx) => `
+                    <tr style="border-bottom:1px solid #f1f5f9; background:${rIdx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                      ${row.map(cell => `<td style="padding:6px 10px; color:#334155;">${cell}</td>`).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+    }
+
+    div.innerHTML = `<div class="ai-msg-bubble"><p>${formatted}</p>${visualHtml}</div>`;
     list.appendChild(div);
     list.scrollTop = list.scrollHeight;
   }
@@ -881,26 +931,27 @@
       <div class="ai-form-group">
         <label>AI Provider</label>
         <select class="ai-input" id="ai-provider-select">
-          <option value="gemini">Google Gemini Cloud (Recommended)</option>
-          <option value="localhost">Localhost AI API (http://localhost:3000)</option>
+          <option value="platform">AI Assistant Platform (Dedicated Host - Port 4000)</option>
+          <option value="gemini">Google Gemini Cloud (Direct)</option>
+          <option value="localhost">Localhost SQLite Chatbot (Port 3000)</option>
           <option value="openai">OpenAI (Custom Gateway)</option>
           <option value="custom">Custom Endpoint / Self-Hosted</option>
         </select>
       </div>
 
-      <div class="ai-form-group" id="ai-endpoint-group" style="display:none;">
-        <label>Local / Custom Endpoint URL</label>
-        <input type="text" class="ai-input" id="ai-endpoint-url" placeholder="http://localhost:3000" value="http://localhost:3000">
-        <p class="hint">Direct browser-to-localhost route with CORS. Auto-grounded in your local SQLite tournament database.</p>
+      <div class="ai-form-group" id="ai-endpoint-group">
+        <label id="ai-endpoint-label">AI Host Endpoint URL</label>
+        <input type="text" class="ai-input" id="ai-endpoint-url" placeholder="http://localhost:4000" value="http://localhost:4000">
+        <p class="hint" id="ai-endpoint-hint">Host address of ai-assistant-platform (Port 4000). Direct CORS connection with full cricket tool support.</p>
       </div>
 
       <div class="ai-form-group">
-        <label>Gemini API Key</label>
+        <label id="ai-api-key-label">API Key / Bot Key</label>
         <div style="position:relative; display:flex; align-items:center;">
-          <input type="password" class="ai-input" id="ai-api-key" placeholder="Enter your Gemini API key (AIza...)" style="padding-right:45px;">
+          <input type="password" class="ai-input" id="ai-api-key" placeholder="Enter your key or Bot API Key (aap_pk_...)" style="padding-right:45px;">
           <button type="button" id="ai-eye-btn" style="position:absolute; right:10px; background:none; border:none; color:#64748b; cursor:pointer;">👁</button>
         </div>
-        <p class="hint">Your key is encrypted on the server and masked in the UI. Leave blank to keep existing saved key.</p>
+        <p class="hint" id="ai-key-hint">Your key is kept safe. For AI Platform, use the Bot API Key generated on port 4000.</p>
       </div>
 
       <div class="ai-form-group">
@@ -976,8 +1027,36 @@
     const provSelect = document.getElementById('ai-provider-select');
     const endpointGroup = document.getElementById('ai-endpoint-group');
     const updateEndpointVis = (val) => {
+      const endpointLabel = document.getElementById('ai-endpoint-label');
+      const endpointHint = document.getElementById('ai-endpoint-hint');
+      const endpointInput = document.getElementById('ai-endpoint-url');
+      const keyLabel = document.getElementById('ai-api-key-label');
+      const keyHint = document.getElementById('ai-key-hint');
+      const keyInput = document.getElementById('ai-api-key');
+
       if (endpointGroup) {
-        endpointGroup.style.display = (val === 'localhost' || val === 'custom') ? 'block' : 'none';
+        endpointGroup.style.display = (val === 'platform' || val === 'localhost' || val === 'custom') ? 'block' : 'none';
+      }
+
+      if (val === 'platform') {
+        if (endpointLabel) endpointLabel.textContent = 'AI Platform Host Endpoint';
+        if (endpointHint) endpointHint.textContent = 'Host address of ai-assistant-platform (Port 4000). Direct CORS connection with full cricket tool support.';
+        if (endpointInput && (!endpointInput.value || endpointInput.value.includes(':3000'))) endpointInput.value = 'http://localhost:4000';
+        if (keyLabel) keyLabel.textContent = 'Platform Bot API Key (aap_pk_...)';
+        if (keyHint) keyHint.textContent = 'Publishable Bot Key created in ai-assistant-platform. Default key is pre-configured.';
+        if (keyInput) keyInput.placeholder = `Bot Key (e.g. ${DEFAULT_PLATFORM_KEY.slice(0, 14)}...)`;
+      } else if (val === 'localhost') {
+        if (endpointLabel) endpointLabel.textContent = 'Localhost Chatbot Endpoint';
+        if (endpointHint) endpointHint.textContent = 'Direct route to local SQLite Chatbot server on port 3000.';
+        if (endpointInput && (!endpointInput.value || endpointInput.value.includes(':4000'))) endpointInput.value = 'http://localhost:3000';
+        if (keyLabel) keyLabel.textContent = 'Gemini API Key';
+        if (keyHint) keyHint.textContent = 'API key used by the local server.';
+        if (keyInput) keyInput.placeholder = 'Enter your Gemini API key (AIza...)';
+      } else {
+        if (endpointLabel) endpointLabel.textContent = 'Custom Endpoint URL';
+        if (keyLabel) keyLabel.textContent = 'API Key';
+        if (keyHint) keyHint.textContent = 'Your key is encrypted on the server and masked in the UI.';
+        if (keyInput) keyInput.placeholder = 'Enter API key';
       }
     };
     if (provSelect) {
@@ -1000,7 +1079,51 @@
       const provVal = document.getElementById('ai-provider-select').value;
       const keyVal = keyInput.value.trim();
       const modelVal = document.getElementById('ai-model-select').value;
-      const endpointVal = (document.getElementById('ai-endpoint-url')?.value || 'http://localhost:3000').trim().replace(/\/+$/, '');
+      const endpointVal = (document.getElementById('ai-endpoint-url')?.value || (provVal === 'platform' ? 'http://localhost:4000' : 'http://localhost:3000')).trim().replace(/\/+$/, '');
+
+      if (provVal === 'platform') {
+        resultBox.textContent = `Connecting to AI Assistant Platform at ${endpointVal}...`;
+        try {
+          const healthRes = await fetch(`${endpointVal}/healthz`);
+          if (!healthRes.ok) throw new Error(`HTTP ${healthRes.status} from healthz`);
+          const healthData = await healthRes.json();
+
+          const botKey = keyVal || localStorage.getItem('stumpix_bot_key') || DEFAULT_PLATFORM_KEY;
+          resultBox.textContent = `Testing Bot Key verification on ${endpointVal}...`;
+
+          const sessRes = await fetch(`${endpointVal}/v1/widget/session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              key: botKey,
+              visitorId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('test-visitor-' + Date.now()),
+            }),
+          });
+          const sessData = await sessRes.json();
+
+          if (!sessRes.ok) {
+            throw new Error(`Bot Key check failed: ${sessData.detail || sessData.title || JSON.stringify(sessData)}`);
+          }
+
+          resultBox.style.background = '#dcfce7';
+          resultBox.style.color = '#15803d';
+          resultBox.style.border = '1px solid #86efac';
+          resultBox.style.whiteSpace = 'pre-line';
+          resultBox.textContent = `✅ AI Assistant Platform is ONLINE (Port 4000)!\n` +
+            `Bot Name: "${sessData.botName || 'Stumpix Cricket Bot'}"\n` +
+            `AI Engine: ${healthData.llm} | Speech: ${healthData.stt} / ${healthData.tts}\n` +
+            `Features: Realtime Voice Live Call: ${sessData.features?.liveCall ? 'Enabled' : 'Disabled'}\n` +
+            `Cricket Data Connector: Connected to Beta API (https://betapplapi.kcnanja.com/api).`;
+        } catch (err) {
+          resultBox.style.background = '#fee2e2';
+          resultBox.style.color = '#b91c1c';
+          resultBox.style.border = '1px solid #fca5a5';
+          resultBox.textContent = `❌ Cannot reach AI Assistant Platform at ${endpointVal}.\nMake sure run-ai-platform.bat is running on your machine!\nError: ${err.message}`;
+        }
+        return;
+      }
 
       if (provVal === 'localhost') {
         resultBox.textContent = `Connecting to Localhost AI API at ${endpointVal}...`;
@@ -1079,7 +1202,7 @@
       saveBtn.textContent = 'Saving...';
 
       const provVal = document.getElementById('ai-provider-select').value;
-      const endpointVal = (document.getElementById('ai-endpoint-url')?.value || 'http://localhost:3000').trim().replace(/\/+$/, '');
+      const endpointVal = (document.getElementById('ai-endpoint-url')?.value || (provVal === 'platform' ? 'http://localhost:4000' : 'http://localhost:3000')).trim().replace(/\/+$/, '');
       const keyVal = keyInput.value.trim();
       const modelVal = document.getElementById('ai-model-select').value;
       const promptVal = document.getElementById('ai-system-prompt').value.trim();
@@ -1087,6 +1210,13 @@
       // Persist preferences locally in browser
       localStorage.setItem('stumpix_ai_provider', provVal);
       localStorage.setItem('stumpix_ai_endpoint', endpointVal);
+      if (provVal === 'platform') {
+        if (keyVal) {
+          localStorage.setItem('stumpix_bot_key', keyVal);
+        } else if (!localStorage.getItem('stumpix_bot_key')) {
+          localStorage.setItem('stumpix_bot_key', DEFAULT_PLATFORM_KEY);
+        }
+      }
 
       if (provVal === 'localhost') {
         // Also sync settings file on localhost
@@ -1148,23 +1278,31 @@
       slider.style.background = cfg.enabled ? '#0ea5e9' : '#cbd5e1';
       updateStatusPill(cfg.enabled);
     }
-    const savedProv = localStorage.getItem('stumpix_ai_provider') || cfg.provider || 'gemini';
+    const savedProv = localStorage.getItem('stumpix_ai_provider') || cfg.provider || 'platform';
     const prov = document.getElementById('ai-provider-select');
     if (prov) {
       prov.value = savedProv;
       const endpointGroup = document.getElementById('ai-endpoint-group');
       if (endpointGroup) {
-        endpointGroup.style.display = (savedProv === 'localhost' || savedProv === 'custom') ? 'block' : 'none';
+        endpointGroup.style.display = (savedProv === 'platform' || savedProv === 'localhost' || savedProv === 'custom') ? 'block' : 'none';
       }
     }
 
     const endpointInput = document.getElementById('ai-endpoint-url');
     if (endpointInput) {
-      endpointInput.value = localStorage.getItem('stumpix_ai_endpoint') || cfg.endpointUrl || 'http://localhost:3000';
+      const defaultEndpoint = savedProv === 'platform' ? 'http://localhost:4000' : (savedProv === 'localhost' ? 'http://localhost:3000' : 'http://localhost:4000');
+      endpointInput.value = localStorage.getItem('stumpix_ai_endpoint') || cfg.endpointUrl || defaultEndpoint;
     }
 
     const key = document.getElementById('ai-api-key');
-    if (key && cfg.apiKey) key.placeholder = `Saved: ${cfg.apiKey} (Type to replace)`;
+    if (key) {
+      if (savedProv === 'platform') {
+        const botKey = localStorage.getItem('stumpix_bot_key') || cfg.apiKey || DEFAULT_PLATFORM_KEY;
+        key.placeholder = `Bot Key: ${botKey.slice(0, 14)}... (Type to replace)`;
+      } else if (cfg.apiKey) {
+        key.placeholder = `Saved: ${cfg.apiKey} (Type to replace)`;
+      }
+    }
 
     const mod = document.getElementById('ai-model-select');
     if (mod && cfg.model) mod.value = cfg.model;
