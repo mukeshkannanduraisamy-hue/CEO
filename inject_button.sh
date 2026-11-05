@@ -1,22 +1,20 @@
 #!/bin/bash
 D=/home/u403881955/domains/betappl.kcnanja.com/public_html
+F="$D/index.html"
 
-node -e "
-const fs = require('fs');
-const file = '$D/index.html';
-let html = fs.readFileSync(file, 'utf8');
-
-if (!html.includes('beta-sync-widget')) {
-  const widget = \`
+if ! grep -q "beta-sync-widget" "$F"; then
+    # Cut off closing </body> and </html>
+    grep -v -E "</body>|</html>" "$F" > /tmp/index_part.html
+    cat << 'EOF' >> /tmp/index_part.html
 <!-- Beta Live Sync Floating Button -->
-<div id=\"beta-sync-widget\" style=\"position:fixed;bottom:24px;right:24px;z-index:999999;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;\">
-  <button id=\"btn-sync-live\" style=\"display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;border:none;padding:10px 18px;border-radius:9999px;font-size:13px;font-weight:700;letter-spacing:0.3px;box-shadow:0 6px 20px rgba(16,185,129,0.45);cursor:pointer;transition:all 0.25s ease;outline:none;\">
-    <svg id=\"sync-spin-icon\" style=\"transition:transform 0.5s ease;\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
-      <path d=\"M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2\"/>
+<div id="beta-sync-widget" style="position:fixed;bottom:24px;right:24px;z-index:999999;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
+  <button id="btn-sync-live" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;border:none;padding:10px 18px;border-radius:9999px;font-size:13px;font-weight:700;letter-spacing:0.3px;box-shadow:0 6px 20px rgba(16,185,129,0.45);cursor:pointer;transition:all 0.25s ease;outline:none;">
+    <svg id="sync-spin-icon" style="transition:transform 0.5s ease;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
     </svg>
-    <span id=\"sync-label\">Sync Live Data</span>
+    <span id="sync-label">Sync Live Data</span>
   </button>
-  <div id=\"sync-info-toast\" style=\"display:none;margin-top:8px;padding:8px 14px;background:#0f172a;color:#f1f5f9;font-size:12px;font-weight:500;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.3);text-align:center;border:1px solid #334155;\"></div>
+  <div id="sync-info-toast" style="display:none;margin-top:8px;padding:8px 14px;background:#0f172a;color:#f1f5f9;font-size:12px;font-weight:500;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.3);text-align:center;border:1px solid #334155;"></div>
 </div>
 <style>
   @keyframes spinAnimation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -66,11 +64,12 @@ if (!html.includes('beta-sync-widget')) {
   });
 })();
 </script>
-\`;
-  html = html.replace('</body>', widget + '\n</body>');
-  fs.writeFileSync(file, html, 'utf8');
-  console.log('Successfully injected sync button into index.html');
-} else {
-  console.log('Button already present');
-}
-"
+</body>
+</html>
+EOF
+    cp /tmp/index_part.html "$F"
+    rm -f /tmp/index_part.html
+    echo "Button injected successfully via pure bash."
+else
+    echo "Button already present."
+fi
